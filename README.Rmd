@@ -9,11 +9,19 @@ output:
 ```{r, echo = FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
-  comment = "#>"
+  comment = "#>",
+  fig.path = "man/figures/README-"
 )
 ```
 
 # kdensity <img src="man/figures/logo.png" align="right" width="247" height="70" />
+[![Build Status](https://travis-ci.org/JonasMoss/kdensity.svg?branch=master)](https://travis-ci.org/JonasMoss/kdensity)
+[![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/JonasMoss/kdensity?branch=master&svg=true)](https://ci.appveyor.com/project/JonasMoss/kdensity)
+[![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/kdensity)](http://cran.r-project.org/package=kdensity)
+[![Coverage Status](https://codecov.io/gh/JonasMoss/kdensity/branch/master/graph/badge.svg)](https://codecov.io/gh/JonasMoss/kdensity?branch=master)
+[![DOI](https://zenodo.org/badge/120678148.svg)](https://zenodo.org/badge/latestdoi/120678148)
+
+
 An `R` package for univariate kernel density estimation with parametric starts and asymmetric kernels.
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -31,11 +39,16 @@ kdensity is an implementation of univariate kernel density estimation with suppo
 A reason to use `kdensity` is to avoid *boundary bias* when estimating densities on the unit interval or the positive half-line. Asymmetric kernels such as `gamma` and `gcopula` are designed for this purpose. The support for parametric starts allows you to easily use a method that is often superior to ordinary kernel density estimation.
 
 ## Installation
-First you need to install the package `devtools` from `CRAN`. From inside `R`, use the following command.
+From inside `R`, use one of the following commands:
 ```{r install, echo = TRUE, eval = FALSE}
+# For the CRAN release
+install.packages("kdensity")
+# For the development version from GitHub:
+# install.packages("devtools")
 devtools::install_github("JonasMoss/kdensity")
 ```
-This installs the latest version of the package from GitHub. Call the `library` function and use it just like `stats:density`, but with optional additional arguments.
+
+Call the `library` function and use it just like `stats:density`, but with optional additional arguments.
 ```{r simpleuse, echo = TRUE, eval = FALSE}
 library("kdensity")
 plot(kdensity(mtcars$mpg, start = "normal"))
@@ -55,7 +68,7 @@ In addition to parametric starts, the package implements some *asymmetric kernel
 
 These features can be combined to make asymmetric kernel densities estimators with parametric starts, see the example below. The package contains only one function, `kdensity`, in addition to the generics `plot`, `points`, `lines`, `summary`, and `print`. 
 
-## How to use
+## Usage
 
 The function `kdensity` takes some `data`, a kernel `kernel` and a parametric start `start`. You can optionally specify the `support` parameter, which is used to find the normalizing constant.
 
@@ -75,10 +88,12 @@ Since the return value of `kdensity` is a function, it is callable, as in:
 kde(10)
 ```
 
-You can access the parameter estimates by using `coef`:
+You can access the parameter estimates by using `coef`. You can also access the log likelihood (`logLik`), AIC and BIC of the parametric start distribution.
 
 ```{r dollar, echo = TRUE}
 coef(kde)
+logLik(kde)
+AIC(kde)
 ```
 ## References
 

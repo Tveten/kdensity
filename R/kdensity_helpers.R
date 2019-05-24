@@ -8,30 +8,25 @@
 #' adhering to the kernel/start list structure. \code{support} is a
 #' numeric vector of length two.
 #'
-#' @param kernel supplied kernel; string or list.
-#' @param start supplied parametric start; string or list.
-#' @param support binary vector.
+#' @keywords internal
+#' @param kernel Supplied kernel; string or list.
+#' @param start Supplied parametric start; string or list.
+#' @param support Binary vector.
 #' @return a list with members kernel, kernel_str, start, start_str,
 #' and support.
 
 get_kernel_start_support = function(kernel, start, support) {
 
-
   ## First we handle the parametric start. This is easy, since its default
   ## value equals uniform.
 
   if(!is.null(start)) {
-    if(!is.list(start)) {
-      start_str = start
-      start = get_start(start)
-    } else {
-      start_str = deparse(substitute(start))
-    }
+    start_str = start
+    start = get_start(start)
   } else {
     start_str = "uniform"
     start = get_start("uniform")
   }
-
 
   if(is.null(kernel) & is.null(support)) {
     ## No arguments will give you the stats::density behaviour by default.
@@ -71,12 +66,8 @@ get_kernel_start_support = function(kernel, start, support) {
 
   ## The next step is to fill in the kernel if it is non-NULL:
   if(!is.null(kernel)) {
-    if(!is.list(kernel)) {
-      kernel_str = kernel
-      kernel = get_kernel(kernel)
-    } else {
-      kernel_str = deparse(substitute(kernel))
-    }
+    kernel_str = kernel
+    kernel = get_kernel(kernel)
   }
 
   if(!is.null(kernel) & is.null(support)) {
@@ -105,6 +96,7 @@ get_kernel_start_support = function(kernel, start, support) {
 #'
 #' The supplied support must never be larger than the support of
 #' the parametric start / kernel.
+#' @keywords internal
 #' @param kernel,start,support The kernel, start and support to check.
 #' @return None.
 support_compatible = function(kernel, start, support) {

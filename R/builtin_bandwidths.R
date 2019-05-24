@@ -1,15 +1,18 @@
+bw_environment = new.env(hash = FALSE)
+
 #' Bandwidth Selectors
 #'
-#' Bandwidth selectors for \code{kdensity}. These are the available options
-#' for the option \code{bw} in \code{kdensity}.
+#' The available options for bandwidth selectors, passed as the \code{bw}
+#' argument to \code{kdensity}.
 #'
-#' The bandwidth functions are not exported. They can be accessed by the
-#' kdensity:: prefix, e.g. kdensity::JE.
+#' The bandwidth functions are not exported. They are members of the
+#' environment \code{bw_environments}, and can be accessed by
+#' \code{kdensity:::bw_environments}.
 #'
 #' @param x The input data.
 #' @param kernel_str A string specifying the kernel, e.g. "gaussian."
 #' @param start_str A string specifying the parametric start, e.g. "normal".
-#' @param support The domain of definiton for the kernel. (-Inf, Inf) for
+#' @param support The domain of definition for the kernel. (-Inf, Inf) for
 #' symmetric kernels.
 #'
 #' @section Bandwidth selectors:
@@ -18,7 +21,7 @@
 #'    "nrd0" is the standard bandwidth selector for symmetric kernels with
 #'    constant parametric starts.
 #'
-#'    \code{"ucv"}: Unbiased cross validation. The usual standard option for
+#'    \code{"ucv"}: Unbiased cross validation. The standard option for
 #'    asymmetric kernels.
 #'
 #'    \code{"RHE"}: Selector for parametric starts with a symmetric kernel,
@@ -40,29 +43,21 @@
 #'
 #' @seealso \code{\link{kdensity}}, \code{\link[stats]{bandwidth}} for the
 #'    bandwidth selectors of \code{\link[stats]{density}}. In addition,
-#'    \code{\link{kernels}}; \code{\link{starts}}
+#'    \code{\link{kernels}}; \code{\link{parametric_starts}}
 #'
 #' @examples
 #'    ## Not a serious bandwidth function.
 #'    silly_width = function(x, kernel = NULL, start = NULL, support = NULL) {
-#'      kernel = get_kernel(kernel)
-#'      kernel$kernel(0.5)
+#'      rexp(1)
 #'    }
+#'    kdensity(mtcars$mpg, start = "gumbel", bw = silly_width)
 #' @references
 #' Jones, M. C., and D. A. Henderson. "Kernel-type density estimation on the unit interval." Biometrika 94.4 (2007): 977-984.
 #' Hjort, Nils Lid, and Ingrid K. Glad. "Nonparametric density estimation with a parametric start." The Annals of Statistics (1995): 882-904.
 #' @name bandwidths
 NULL
 
-bw.JH = function(x, kernel = NULL, start = NULL, support = NULL) {
-
-  # if(kernel != "gcopula") {
-  #   warning("The bandwidth selection method JH is made for the asymmetric kernel 'gcopula'.")
-  # }
-  #
-  # if(support[1] < 0 | support[2] > 1) {
-  #   warning("The bandwidth selection method JH is made for densities on the unit interval.")
-  # }
+bw_environment$JH = function(x, kernel = NULL, start = NULL, support = NULL) {
 
   ## The data is transfomed through qnorm, with singularities removed.
   transformed_x = stats::qnorm(x)
@@ -73,9 +68,9 @@ bw.JH = function(x, kernel = NULL, start = NULL, support = NULL) {
   min(sigma * (2 * mu^2 * sigma^2 + 3*(1 - sigma^2)^2)^(-1/5)*n^(-1/5), 0.5)
 }
 
-bw.RHE = function(x, kernel = NULL, start = NULL, support = NULL) {
+bw_environment$RHE = function(x, kernel = NULL, start = NULL, support = NULL) {
   assertthat::assert_that("EQL" %in% rownames(utils::installed.packages()), msg =
-                            "The bandwidth function 'bw.RHE' requires the package 'EQL' to work.")
+                            "The bandwidth function 'RHE' requires the package 'EQL' to work.")
 
   max_degree = 5  # The maximum degree of the Hermite polynomials.
   n <- length(x)
@@ -96,7 +91,25 @@ bw.RHE = function(x, kernel = NULL, start = NULL, support = NULL) {
   return(bw)
 }
 
-bw.ucv = function(x, kernel = NULL, start = NULL, support = NULL) {
+bw_environment$nrd0 = function(data, kernel, start, support) stats::bw.nrd0(data)
+bw_environment$nrd = function(data, kernel, start, support) stats::bw.nrd(data)
+bw_environment$bcv = function(data, kernel, start, support) stats::bw.bcv(data)
+bw_environment$SJ = function(data, kernel, start, support) stats::bw.SJ(data)
+
+bw_environment$ucv = function(x, kernel = NULL, start = NULL, support = NULL) {
+  ## We check for the combination start == "uniform" and kernel == "gaussian",
+  ## as this is handled by stats::density's related functions.
+
+  if(!is.null(start)) {
+    if (start == "constant" | start == "uniform") {
+      if(!is.null(get_kernel(kernel)$sd)) {
+        return(stats::bw.ucv(x))
+      }
+    }
+  }
+
+
+  ## If we are here, we must do our own cross-validation.
   kernel_obj      = get_kernel(kernel)
   start_obj       = get_start(start)
   kernel_fun      = kernel_obj$kernel
@@ -111,23 +124,19 @@ bw.ucv = function(x, kernel = NULL, start = NULL, support = NULL) {
   full_parameters = start_estimator(x)
 
   arguments = list()
-  arguments[[1]] = data
+  arguments[[1]] = x
   names(arguments)[1] = x_name
+  arguments = append(arguments, as.list(full_parameters))
 
   dstart = function(data, parameters) {
-    arguments = list()
     arguments[[1]] = data
-    names(arguments)[1] = x_name
-    arguments = append(arguments, as.list(parameters))
+    if(length(parameters) > 0) {
+      for(i in 1:length(parameters)) arguments[[i + 1]] = parameters[[i]]
+    }
     do.call(start_density, arguments)
   }
 
-  full_density_values = dstart(x, full_parameters)
-
-  param_loo = list()
-  for (i in 1:n) {
-    param_loo[[i]] = start_estimator(x[-i])
-  }
+  param_loo = lapply(1:n, function(i) start_estimator(x[-i]))
 
   parametric_start_vector = function(data) dstart(data, full_parameters)
 
@@ -148,8 +157,9 @@ bw.ucv = function(x, kernel = NULL, start = NULL, support = NULL) {
 
     term2_vec = rep(0, n)
     for (i in 1:n) {
-      term2_vec[i] = mean(kernel_fun(x, x[i], h) *
-                          dstart(x, param_loo[[i]])) /
+      # Will not work fro asymmetric? Difference between x and y in kernel.
+      term2_vec[i] = mean(1/h*kernel_fun(x[-i], x[i], h) /
+                            dstart(x[-i], param_loo[[i]])) *
                           dstart(x[i], param_loo[[i]])
     }
     term2 = 2 * mean(term2_vec)
@@ -158,13 +168,33 @@ bw.ucv = function(x, kernel = NULL, start = NULL, support = NULL) {
     return(obj_func_value)
   }
 
-  ## The range of allowable bandwidths vary from kernel to kernel.
-  lower = 0.0001
-  upper = upper = 10 * sd(x)
+
+  # The range of allowable bandwidths vary from kernel to kernel.
+
   eps = 10^-10
-  if(kernel == "beta") upper = 1/4 - eps
-  bw = optimize(obj_func, lower = lower, upper, tol = 0.0001)$minimum
+
+  if(kernel == "gcopula" | kernel == "beta" | kernel == "beta_biased") {
+    using_str = "JH"
+    using = bw_environment$JH(x)
+    lower = 1/4*using
+    upper = 1/4 - eps
+  } else if (start == "constant" | start == "uniform"){
+    using_str = "nrd0"
+    using = stats::bw.nrd0(x)
+    lower = 1/5 * using
+    upper = 5 * using
+  } else {
+    using_str = "RHE"
+    using = bw_environment$RHE(x)
+    lower = 1/5 * using
+    upper = 5 * using
+  }
+
+  bw = tryCatch(stats::optimize(obj_func, lower = lower, upper = upper, tol = 0.0001)$minimum,
+                error = function(e) {
+                  warning(paste0("Integration failed when finding bandwidth using 'ucv'. Using '", using_str, "' instead."), call. = FALSE)
+                  using
+                  }
+                )
   return(bw)
 }
-
-

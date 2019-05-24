@@ -2,26 +2,27 @@
 % Please edit documentation in R/kdensity.R
 \name{kdensity}
 \alias{kdensity}
-\title{Kernel density estimator with parametric start}
+\title{Parametrically guided kernel density estimation}
 \usage{
 kdensity(x, bw = NULL, adjust = 1, kernel = NULL, start = NULL,
   support = NULL, na.rm = FALSE, normalized = TRUE)
 }
 \arguments{
-\item{x}{Numeric vector containg the data.}
+\item{x}{Numeric vector containing the data.}
 
-\item{bw}{A bandwidth function. Can be either a string, a custom made
-function, or a double. The supported bandwith functions are documented
+\item{bw}{A bandwidth function. Can be either a string, a custom-made
+function, or a double. The supported bandwidth functions are documented
 in \code{\link{bandwidths}}.}
 
 \item{adjust}{An adjustment constant, so that \code{h = adjust*bw*sd}, where \code{sd}
-varies acccording to the chosen kernel.}
+varies with the chosen kernel.}
 
 \item{kernel}{The kernel function. Can be chosen from the list of built-in
-kernels or be custom made. See \code{\link{kernels}} for details.}
+kernels or be custom-made. See \code{\link{kernels}} for details.}
 
 \item{start}{Parametric start. Can be chosen from the list of built-in
-parametric starts or be custom made. See \code{\link{starts}} for details.}
+parametric starts or be custom-made. See \code{\link{parametric_starts}} for
+details.}
 
 \item{support}{The support of the data. Must be compatible with the supplied
 \code{x} and the supplied \code{start} and \code{kernel}. Is used to find the
@@ -51,11 +52,20 @@ following elements, accessible by '$':
 }
 }
 \description{
-\code{kdensity} computes a kernel density for univariate data. It supports
-asymmetric kernels and parametric starts through the \code{kernel} and
-\code{start} arguments.
+\code{kdensity} computes a parametrically guided kernel density estimate
+for univariate data. It supports asymmetric kernels and parametric starts
+through the \code{kernel} and \code{start} arguments.
 }
 \details{
+The default values for \code{bw}, \code{kernel}, \code{start}, and
+\code{support} are interdependent, and are chosen to make sense. E.g.,
+the default value for \code{support} when \code{start = beta} is
+\code{c(0, 1)}.
+
+The \code{start} argument defaults to \code{uniform}, which corresponds
+to ordinary kernel density estimation. The typical default value for
+\code{kernel} is \code{gaussian}.
+
 If \code{normalized} is \code{FALSE} and \code{start != "uniform"}, the resulting
 density will not integrate to 1 in general.
 }

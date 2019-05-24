@@ -10,9 +10,8 @@ recycle(..., prototype)
 \item{...}{A list of arguments to be recycled.}
 
 \item{prototype}{an optional argument. If given, repeats all arguments
-up to he length of the prototype. If an element of the list has the name,
-it is used. If not, the variable itself is used. If it is a non-negative
-integer,}
+up to the length of the prototype. If an element of the list has the name,
+it is used. If not, the variable itself is used.}
 }
 \description{
 Recycles arguments.
@@ -21,3 +20,4 @@ Recycles arguments.
 Recycles arguments so that all vectors are equally long. If a
 prototype is given, each vector will have the same size as the prototype.
 }
+\keyword{internal}

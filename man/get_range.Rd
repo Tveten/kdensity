@@ -7,11 +7,12 @@
 get_range(obj)
 }
 \arguments{
-\item{obj}{a kdensity object}
+\item{obj}{A kdensity object.}
 }
 \value{
-a vector of size 1000, used for plotting.
+S vector of size 1000, used for plotting.
 }
 \description{
 Supplies a plotting range from a kdensity object.
 }
+\keyword{internal}

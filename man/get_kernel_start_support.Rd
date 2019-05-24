@@ -7,11 +7,11 @@
 get_kernel_start_support(kernel, start, support)
 }
 \arguments{
-\item{kernel}{supplied kernel; string or list.}
+\item{kernel}{Supplied kernel; string or list.}
 
-\item{start}{supplied parametric start; string or list.}
+\item{start}{Supplied parametric start; string or list.}
 
-\item{support}{binary vector.}
+\item{support}{Binary vector.}
 }
 \value{
 a list with members kernel, kernel_str, start, start_str,
@@ -27,3 +27,4 @@ The \code{kernel} and \code{start} parameters are either strings or
 adhering to the kernel/start list structure. \code{support} is a
 numeric vector of length two.
 }
+\keyword{internal}
